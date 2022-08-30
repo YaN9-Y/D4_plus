@@ -4,7 +4,7 @@ This is the PyTorch implementation of the paper 'Robust Unpaired Image Dehazing 
 
 Introduction
 ---------------------------------
-In this paper, we propose a self-augmented image dehazing framework, termed D4 (Dehazing via Decomposing transmission map into Density and Depth) for haze generation and removal. Instead of merely estimating transmission maps or clean content, the proposed framework focuses on exploring scattering coefficient and depth information contained in hazy and clean images. With estimated scene depth, our method is capable of re-rendering hazy images with different thicknesses which further benefits the training of the dehazing network.
+This paper presents an advanced version of our original work, termed D4+. The upgraded framework exploits a dual contrastive perceptual loss to further improve the performance of both haze removal and generation. Moreover, it successfully extends the scope of training from indoor synthetic datasets to real outdoor scenes and achieves remarkable improvement in dehazing performance. Such extension together with the introduced contrastive loss makes the whole framework more robust and effective for real-world hazy scenes. More detailed experiments on both synthetic and real datasets are conducted to validate the effectiveness of our method.
 
 Prerequisites
 ---------------------------------
