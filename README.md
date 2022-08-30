@@ -1,4 +1,4 @@
-D4+: Self-augmented Unpaired Image Dehazing via Density and Depth Decomposition
+D4+: Robust Unpaired Image Dehazing via Density and Depth Decomposition
 ===============================================
 This is the PyTorch implementation of the paper 'Robust Unpaired Image Dehazing via Density and Depth Decomposition'.
 
@@ -20,7 +20,6 @@ After downloading the dataset, please use scripts/flist.py to generate the file 
 ```
 python scripts/flist.py --path path_to_SOTS_indoor_hazy_path --output ./datasets/sots_test_hazy_indoor.flist
 ```
-And then fill the path of ground truth images in the config file.
 
 Please notice that the ground truth images of SOTS-indoor have additional white border, you can crop it first.
 
