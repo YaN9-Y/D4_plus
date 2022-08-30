@@ -31,14 +31,14 @@ python scripts/flist.py --path ITS_train_hazy_path --output ./datasets/its_train
 python scripts/flist.py --path ITS_train_gt_path --output ./datasets/its_train_gt.flist
 ```
 
-For training on real outdoor scenes, we used images collected from OTS and URHI dataset. [Download link]
+For training on real outdoor scenes, we used images collected from OTS and URHI dataset. [Download link](https://drive.google.com/file/d/1DH6xSNxC40WK0w_vsQfF_LFWKLAYArsx/view?usp=sharing)
 
 
 Getting Started
 --------------------------------------
 To use the pre-trained models, download it from the following link then copy it to the corresponding checkpoints folder, like `./checkpoints/quick_test`
 
-[Pretrained model](https://drive.google.com/file/d/1KLvPdNpskdVDSz0qEIP_tn-j2MwTcJAV/view?usp=sharing)
+[Pretrained model](https://drive.google.com/file/d/1rltFEgSxmnFHPDS5JXE-s_RQE_JtfLRe/view?usp=sharing)
 
 ### 0.Quick Testing
 To hold a quick-testing of our dehazing model, download our pre-trained model and put it into `checkpoints/quick_test`, then run:
