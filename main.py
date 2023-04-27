@@ -140,8 +140,7 @@ def load_config(mode=None):
             config.USE_GUIDED_FILTER = 1
         elif config.DATASET == 'IHAZE':
             config.USE_DC_A = 1
-            config.USE_GUIDED_FILTER = 0
-            config.TIMES = 0.7
+            config.USE_GUIDED_FILTER = 1
         elif config.DATASET == 'REAL' or config.DATASET == 'RTTS':
             config.USE_DC_A = 1
             config.USE_GUIDED_FILTER = 1   #set this to 0 for higher FADE, may produce artifacts.
