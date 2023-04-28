@@ -23,7 +23,7 @@ python scripts/flist.py --path path_to_SOTS_indoor_hazy_path --output ./datasets
 
 Please notice that the ground truth images of SOTS-indoor have additional white border, you can crop it first.
 
-### 2.Data for training 
+### 2.Data for training (Still organizing)
 For training on the synthetic indoor dataset, we used [ITS](https://sites.google.com/view/reside-dehaze-datasets/reside-standard) dataset, you can follow the operations above to generate the training file lists.
 
 ```
@@ -31,7 +31,7 @@ python scripts/flist.py --path ITS_train_hazy_path --output ./datasets/its_train
 python scripts/flist.py --path ITS_train_gt_path --output ./datasets/its_train_gt.flist
 ```
 
-For training on real outdoor scenes, we used reside-unpaired from [RefineDNet](https://github.com/xiaofeng94/RefineDNet-for-dehazing) and generate sky mask basing on it. The datasets together with the generated mask is available at [Download link](https://drive.google.com/file/d/1pfXZCFZ-8F53LdHyXHuiQdFNFbQ0qBmV/view?usp=share_link)
+For training on real outdoor scenes, we used reside-unpaired from [RefineDNet](https://github.com/xiaofeng94/RefineDNet-for-dehazing) and generate sky mask basing on it. The datasets together with our generated mask is available at [Download link](https://drive.google.com/file/d/1pfXZCFZ-8F53LdHyXHuiQdFNFbQ0qBmV/view?usp=share_link). Please notice that some masks for hazy images may be inaccurate due to dense haze. But these masks work fine to eliminate the ambiguity of sky. However, this mask dataset is not appropriate for training segmentation models. 
 
 
 Getting Started
@@ -53,10 +53,10 @@ python train.py --model 1 --checkpoints ./checkpoints/train_example
 ### 2. Testing
 1)Prepare the testing datasets following the operations in the Dataset part.
 2)Put the trained weight in the checkpoint folder 
-2)Add a config file 'config.yml' in your checkpoints folder. We have provided example checkpoints folder and config files in `./checkpoints/test_example`, 
+2)Add a config file 'config.yml' in your checkpoints folder. We have provided example checkpoints folder and config files in `./checkpoints/`, 
 3)Test the model, for example:
 ```
-python test.py --model 1 --checkpoints ./checkpoints/test_example
+python test.py --model 1 --checkpoints ./checkpoints/test_sots_indoor_example
 ```
 
 
