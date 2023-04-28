@@ -46,9 +46,9 @@ class BaseNetwork(nn.Module):
 
 
 class HazeRemovalNet(BaseNetwork):
-    def __init__(self, base_channel_nums, init_weights=True, path=None, min_beta=0.04, max_beta=0.2, min_d=0.3, max_d=5, use_dc_A=0):
+    def __init__(self, base_channel_nums, init_weights=True, path=None, min_beta=0.04, max_beta=0.2, min_d=0.3, max_d=5, use_dc_A=0, r=None, is_real_model=None):
         super(HazeRemovalNet, self).__init__()
-        self.dcgf_tool = DCGFTools()
+        self.dcgf_tool = DCGFTools(radius=r)
 
         use_spectral_norm = False
 
@@ -58,6 +58,11 @@ class HazeRemovalNet(BaseNetwork):
         self.MAX_D = max_d
 
         self.use_dc_A = True if use_dc_A == 1 else False
+        
+        if is_real_model is None or is_real_model == 0:
+            bn=False
+        else:
+            bn=True
 
         backbone = "efficientnet_lite3"
         exportable = True
@@ -72,6 +77,8 @@ class HazeRemovalNet(BaseNetwork):
         self.backbone = backbone
 
         self.groups = 1
+
+        
 
         features1 = features
         features2 = features
@@ -90,13 +97,13 @@ class HazeRemovalNet(BaseNetwork):
 
         self.scratch.activation = nn.ReLU(False)
 
-        self.scratch.refinenet4 = FeatureFusionBlock_custom(features4, self.scratch.activation, deconv=False, bn=False,
+        self.scratch.refinenet4 = FeatureFusionBlock_custom(features4, self.scratch.activation, deconv=False, bn=bn,
                                                             expand=self.expand, align_corners=align_corners)
-        self.scratch.refinenet3 = FeatureFusionBlock_custom(features3, self.scratch.activation, deconv=False, bn=False,
+        self.scratch.refinenet3 = FeatureFusionBlock_custom(features3, self.scratch.activation, deconv=False, bn=bn,
                                                             expand=self.expand, align_corners=align_corners)
-        self.scratch.refinenet2 = FeatureFusionBlock_custom(features2, self.scratch.activation, deconv=False, bn=False,
+        self.scratch.refinenet2 = FeatureFusionBlock_custom(features2, self.scratch.activation, deconv=False, bn=bn,
                                                             expand=self.expand, align_corners=align_corners)
-        self.scratch.refinenet1 = FeatureFusionBlock_custom(features1, self.scratch.activation, deconv=False, bn=False,
+        self.scratch.refinenet1 = FeatureFusionBlock_custom(features1, self.scratch.activation, deconv=False, bn=bn,
                                                             align_corners=align_corners)
 
         self.scratch.output_conv = nn.Sequential(
@@ -282,13 +289,17 @@ class HazeProduceNet(BaseNetwork):
 
 
 class DepthEstimationNet(BaseNetwork):
-    def __init__(self, base_channel_nums=48, min_d=0.3, max_d=10, path=None, init_weights=True):
+    def __init__(self, base_channel_nums=48, min_d=0.3, max_d=10, path=None, init_weights=True, is_real_model=None):
         super(DepthEstimationNet, self).__init__()
         self.transmission_estimator = DCGFTools()
 
         self.MIN_D = min_d
         self.MAX_D = max_d
-
+        
+        if is_real_model is None or is_real_model == 0:
+            bn=False
+        else: 
+            bn=True
         backbone = "efficientnet_lite3"
         exportable = True
         align_corners = True
@@ -320,13 +331,13 @@ class DepthEstimationNet(BaseNetwork):
 
         self.scratch.activation = nn.ReLU(False)
 
-        self.scratch.refinenet4 = FeatureFusionBlock_custom(features4, self.scratch.activation, deconv=False, bn=False,
+        self.scratch.refinenet4 = FeatureFusionBlock_custom(features4, self.scratch.activation, deconv=False, bn=bn,
                                                             expand=self.expand, align_corners=align_corners)
-        self.scratch.refinenet3 = FeatureFusionBlock_custom(features3, self.scratch.activation, deconv=False, bn=False,
+        self.scratch.refinenet3 = FeatureFusionBlock_custom(features3, self.scratch.activation, deconv=False, bn=bn,
                                                             expand=self.expand, align_corners=align_corners)
-        self.scratch.refinenet2 = FeatureFusionBlock_custom(features2, self.scratch.activation, deconv=False, bn=False,
+        self.scratch.refinenet2 = FeatureFusionBlock_custom(features2, self.scratch.activation, deconv=False, bn=bn,
                                                             expand=self.expand, align_corners=align_corners)
-        self.scratch.refinenet1 = FeatureFusionBlock_custom(features1, self.scratch.activation, deconv=False, bn=False,
+        self.scratch.refinenet1 = FeatureFusionBlock_custom(features1, self.scratch.activation, deconv=False, bn=bn,
                                                             align_corners=align_corners)
 
         self.scratch.output_conv = nn.Sequential(
@@ -593,7 +604,7 @@ class Discriminator(BaseNetwork):
 
 
 class DCGFTools(nn.Module):
-    def __init__(self, width=15,):
+    def __init__(self, width=15, radius=None):
         super(DCGFTools, self).__init__()
         self.width = width
         self.t_min = 0.2
@@ -603,7 +614,10 @@ class DCGFTools(nn.Module):
         self.p = 0.001
         self.max_pool = nn.MaxPool2d(kernel_size=width,stride=1)
         self.max_pool_with_index = nn.MaxPool2d(kernel_size=width, return_indices=True)
-        self.guided_filter = GuidedFilter(r=40,eps=1e-3)
+        if radius is None:
+            self.guided_filter = GuidedFilter(r=40,eps=1e-3)
+        else:
+            self.guided_filter = GuidedFilter(r=radius,eps=1e-3)
 
 
     def get_dark_channel(self, x):

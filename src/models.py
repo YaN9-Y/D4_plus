@@ -48,8 +48,8 @@ class Model(BaseModel):
         self.use_dc_A = True if config.USE_DC_A == 1 else False
 
 
-        self.depth_estimator = DepthEstimationNet(config.BASE_CHANNEL_NUM // 2, min_d=config.MIN_D, max_d=config.MAX_D, path=self.gen_weights_path[:-4]+'_'+self.name+'.pth')
-        self.net_h2c = HazeRemovalNet(config.BASE_CHANNEL_NUM //2 , min_beta=config.MIN_BETA, max_beta=config.MAX_BETA, min_d=config.MIN_D, max_d=config.MAX_D, path=self.gen_weights_path[:-4]+'_'+self.name+'.pth', use_dc_A=config.USE_DC_A)
+        self.depth_estimator = DepthEstimationNet(config.BASE_CHANNEL_NUM // 2, min_d=config.MIN_D, max_d=config.MAX_D, path=self.gen_weights_path[:-4]+'_'+self.name+'.pth', is_real_model=config.IS_REAL_MODEL)
+        self.net_h2c = HazeRemovalNet(config.BASE_CHANNEL_NUM //2 , min_beta=config.MIN_BETA, max_beta=config.MAX_BETA, min_d=config.MIN_D, max_d=config.MAX_D, path=self.gen_weights_path[:-4]+'_'+self.name+'.pth', use_dc_A=config.USE_DC_A, r=config.GF_R, is_real_model=config.IS_REAL_MODEL)
         self.net_c2h = HazeProduceNet(config.BASE_CHANNEL_NUM // 2, in_channels=3, out_channels=3, min_beta=config.MIN_BETA, max_beta=config.MAX_BETA)
 
 
