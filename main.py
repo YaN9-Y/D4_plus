@@ -129,23 +129,25 @@ def load_config(mode=None):
             config.CROP = args.crop
             config.CROP_SIZE = args.crop_size
         
-        if config.DATASET == 'SOTS-indoor':
+        if config.DATASET is None:
+            config.DATASET = 'SOTS-indoor'
+        if str.lower(config.DATASET) == 'sots-indoor':
             config.USE_DC_A = 0
             config.USE_GUIDED_FILTER = 0
             config.IS_REAL_MODEL = 0
-        elif config.DATASET == 'Foggycityscape':
+        elif str.lower(config.DATASET) == 'foggycityscape':
             config.USE_DC_A = 1
             config.USE_GUIDED_FILTER = 0
             config.IS_REAL_MODEL = 0
-        elif config.DATASET == 'SOTS-outdoor':
+        elif str.lower(config.DATASET) == 'sots-outdoor':
             config.USE_DC_A = 1
             config.USE_GUIDED_FILTER = 1
             config.IS_REAL_MODEL = 0
-        elif config.DATASET == 'IHAZE':
+        elif str.lower(config.DATASET) == 'ihaze':
             config.USE_DC_A = 1
             config.USE_GUIDED_FILTER = 1
             config.IS_REAL_MODEL = 0
-        elif config.DATASET == 'REAL' or config.DATASET == 'RTTS':
+        elif str.lower(config.DATASET) == 'real' or str.lower(config.DATASET) == 'rtts':
             config.USE_DC_A = 1
             config.USE_GUIDED_FILTER = 1
             config.GF_R = 2 
