@@ -128,22 +128,28 @@ def load_config(mode=None):
         if args.crop is not None and args.crop_size is not None:
             config.CROP = args.crop
             config.CROP_SIZE = args.crop_size
-
+        
         if config.DATASET == 'SOTS-indoor':
             config.USE_DC_A = 0
             config.USE_GUIDED_FILTER = 0
+            config.IS_REAL_MODEL = 0
         elif config.DATASET == 'Foggycityscape':
             config.USE_DC_A = 1
             config.USE_GUIDED_FILTER = 0
+            config.IS_REAL_MODEL = 0
         elif config.DATASET == 'SOTS-outdoor':
             config.USE_DC_A = 1
             config.USE_GUIDED_FILTER = 1
+            config.IS_REAL_MODEL = 0
         elif config.DATASET == 'IHAZE':
             config.USE_DC_A = 1
             config.USE_GUIDED_FILTER = 1
+            config.IS_REAL_MODEL = 0
         elif config.DATASET == 'REAL' or config.DATASET == 'RTTS':
             config.USE_DC_A = 1
-            config.USE_GUIDED_FILTER = 1   #set this to 0 for higher FADE, may produce artifacts.
+            config.USE_GUIDED_FILTER = 1
+            config.GF_R = 2 
+            config.IS_REAL_MODEL = 1
 
 
     return config
