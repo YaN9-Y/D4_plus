@@ -53,11 +53,14 @@ python train.py --model 1 --checkpoints ./checkpoints/train_example
 ### 2. Testing
 1)Prepare the testing datasets following the operations in the Dataset part.
 2)Put the trained weight in the checkpoint folder 
-2)Add a config file 'config.yml' in your checkpoints folder. We have provided example checkpoints folder and config files in `./checkpoints/`, 
-3)Test the model, for example:
+3)Add a config file 'config.yml' in your checkpoints folder. We have provided example checkpoints folder and config files in `./checkpoints/`, 
+4)Test the model, for example:
 ```
 python test.py --model 1 --checkpoints ./checkpoints/test_sots_indoor_example
 ```
+For quick testing, you can download the checkpoint and put it to the corresponding folder `./checkpoints/test_rtts_example` or `./checkpoints/test_sots_indoor_example` and run test on our example images directly using
 
-
+```
+python test.py --model 1 --checkpoints ./checkpoints/test_sots_indoor_example  OR ./checkpoints/test_rtts_example
+```
 
