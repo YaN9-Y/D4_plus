@@ -9,7 +9,7 @@ This paper presents an advanced version of our original work, termed D4+. The up
 Prerequisites
 ---------------------------------
 * Python 3.7
-* Pytorch 1.7.1
+* Pytorch 1.10
 * NVIDIA GPU + CUDA cuDNN
 
 Datasets
