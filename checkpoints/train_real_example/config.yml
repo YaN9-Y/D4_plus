@@ -1,0 +1,55 @@
+MODE: 1             # 1: train, 2: test 
+MODEL: 1            
+SEED: 10            # random seed 
+GPU: [0]            # list of gpu ids
+DEBUG: 0            
+VERBOSE: 0          
+TEST_MODE: pair_test     # hazy: for dehaze.  clean: for rehaze 
+
+TRAIN_CLEAN_FLIST: ./datasets/real_train_clean.flist   # filelist of the clean training images
+TRAIN_HAZY_FLIST: ./datasets/real_train_hazy.flist   # filelist of the hazy training images
+PATH_CLEAN_MASK: /home/xteam/yang/dataset/reside_unpaired_new/clean_mask  # path of the clean images mask
+PATH_HAZY_MASK: /home/xteam/yang/dataset/reside_unpaired_new/hazy_mask # path of the hazy images mask
+
+
+
+DATASET:  REAL         #  SOTS-indoor / SOTS-outdoor / Foggycityscape / IHAZE / REAL / RTTS for testing
+IS_REAL_MODEL: 1 # Is using model trained on real-world or to train model on real-world? (1 Yes / 0 No)
+
+
+LR: 0.0001                       # learning rate
+WEIGHT_DECAY: 0                   
+D2G_LR: 0.1                   # discriminator/generator learning rate ratio
+BETA1: 0.9                    # adam optimizer beta1
+BETA2: 0.999                    # adam optimizer beta2
+BATCH_SIZE: 2                 # input batch size for training1
+CROP_SIZE: 256               # input image size for training 
+MAX_ITERS: 120001                # maximum number of iterations to train the model
+BASE_CHANNEL_NUM: 64
+
+
+
+MIN_BETA: 0.010
+MAX_BETA: 0.035
+MIN_D: 20                    
+MAX_D: 350
+
+
+USE_DC_A:                     # none: using default    1:use  0: not use
+USE_GUIDED_FILTER:            # none: using default
+
+
+CONTRAST_LOSS_WEIGHT: 0.0001
+GAN_LOSS_WEIGHT: 0.2
+CYCLE_LOSS_WEIGHT: 1 
+PARA_LOSS_WEIGHT: 1
+
+
+GAN_LOSS: lsgan               # nsgan | lsgan | hinge
+GAN_POOL_SIZE: 0              # fake images pool size
+
+SAVE_INTERVAL: 2000           # how many iterations to wait before saving model (0: never)
+SAMPLE_INTERVAL: 2000        # how many iterations to wait before sampling (0: never)
+SAMPLE_SIZE: 4               # number of images to sample
+EVAL_INTERVAL: 2000              # how many iterations to wait before model evaluation (0: never)
+LOG_INTERVAL: 100              # how many iterations to wait before logging training status (0: never)
