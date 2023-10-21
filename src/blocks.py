@@ -55,9 +55,6 @@ def _make_scratch(in_shape, out_shape, groups=1, expand=False):
 
 
 
-
-
-
 def _make_pretrained_efficientnet_lite3(use_pretrained, exportable=False):
      efficientnet = torch.hub.load(
          "rwightman/gen-efficientnet-pytorch",

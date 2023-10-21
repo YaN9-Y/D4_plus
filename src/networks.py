@@ -135,7 +135,7 @@ class HazeRemovalNet(BaseNetwork):
 
         return A
 
-    def forward(self, x_0, require_paras=False, times=1.0, use_guided_filter=False):
+    def forward(self, x_0, require_paras=False, use_guided_filter=False):
 
         layer_1 = self.pretrained.layer1(x_0)
         layer_2 = self.pretrained.layer2(layer_1)
@@ -149,7 +149,6 @@ class HazeRemovalNet(BaseNetwork):
 
         beta = self.final_conv_beta_1(torch.cat([layer_1_beta, layer_2_beta, layer_3_beta, layer_4_beta], dim=1))
         beta = self.final_conv_beta_2(beta)
-        # beta = (torch.tanh(beta)+1)/2
 
         layer_1_rn = self.scratch.layer1_rn(layer_1)
         layer_2_rn = self.scratch.layer2_rn(layer_2)
@@ -168,22 +167,16 @@ class HazeRemovalNet(BaseNetwork):
         beta = self.MIN_BETA + (self.MAX_BETA-self.MIN_BETA)*(torch.tanh(beta) + 1) / 2
 
         t = ((torch.tanh(t) + 1) / 2)
-        t = t ** times
+
 
         if use_guided_filter:
-            print('a')
             t = self.dcgf_tool.get_refined_transmission(x_0, t)
 
         t = t.clamp(0.05,0.95)
 
-        #print(t)
-        # print(beta)
-
         A = self.forward_get_A(x_0)
-        #A = x_0.max(dim=3)[0].max(dim=2, keepdim=True)[0].unsqueeze(3)
         d = torch.log(t)/(-beta)
 
-        #print(d)
 
         if require_paras:
             return ((x_0-A)/t + A).clamp(0,1), d, beta
@@ -286,6 +279,117 @@ class HazeProduceNet(BaseNetwork):
 
         return res, beta
 
+
+class HazeProduceNet_real(BaseNetwork):
+    def __init__(self, base_channel_nums, in_channels=3, out_channels=3, init_weights=True, min_beta=0.04, max_beta=0.2,
+                 min_d=None, max_d=None):
+        super(HazeProduceNet_real, self).__init__()
+
+        act_type = 'leakyrelu'
+        norm_type = 'batch'
+        mode = 'CNA'
+        use_spectral_norm = False
+        self.MAX_BETA = max_beta
+        self.MIN_BETA = min_beta
+        self.MAX_D = max_d
+        self.MIN_D = min_d
+        self.transmission_estimator = DCGFTools()
+
+        self.enc_conv0 = conv_block(in_nc=in_channels, out_nc=base_channel_nums // 2, kernel_size=3, stride=1,
+                                    pad_type='reflect', mode=mode, act_type=act_type, norm_type=None,
+                                    use_spectral_norm=use_spectral_norm)
+
+        self.enc_conv1 = conv_block(in_nc=base_channel_nums // 2, out_nc=base_channel_nums, kernel_size=3, stride=1,
+                                    pad_type='reflect', mode=mode, act_type=act_type, norm_type=norm_type,
+                                    use_spectral_norm=use_spectral_norm)
+
+        self.enc_conv2 = conv_block(in_nc=base_channel_nums, out_nc=2 * base_channel_nums, kernel_size=3, stride=2,
+                                    pad_type='reflect', mode=mode, act_type=act_type, norm_type=norm_type,
+                                    use_spectral_norm=use_spectral_norm)
+
+        self.enc_conv3 = conv_block(in_nc=2 * base_channel_nums, out_nc=4 * base_channel_nums, kernel_size=3, stride=2,
+                                    pad_type='reflect', mode=mode, act_type=act_type, norm_type=norm_type,
+                                    use_spectral_norm=use_spectral_norm)
+        #
+        self.bottleneck1 = ResNetBlock(in_nc=4 * base_channel_nums, mid_nc=4 * base_channel_nums,
+                                       out_nc=4 * base_channel_nums, kernel_size=3, pad_type='reflect',
+                                       act_type=act_type, norm_type=norm_type, mode=mode,
+                                       use_spectral_norm=use_spectral_norm)
+        self.bottleneck2 = ResNetBlock(in_nc=4 * base_channel_nums, mid_nc=4 * base_channel_nums,
+                                       out_nc=4 * base_channel_nums, kernel_size=3,
+                                       pad_type='reflect', act_type=act_type, norm_type=norm_type, mode=mode,
+                                       use_spectral_norm=use_spectral_norm)
+        self.bottleneck3 = ResNetBlock(in_nc=4 * base_channel_nums, mid_nc=4 * base_channel_nums,
+                                       out_nc=4 * base_channel_nums, kernel_size=3,
+                                       pad_type='reflect', act_type=act_type, norm_type=norm_type, mode=mode,
+                                       use_spectral_norm=use_spectral_norm)
+        self.bottleneck4 = ResNetBlock(in_nc=4 * base_channel_nums, mid_nc=4 * base_channel_nums,
+                                       out_nc=4 * base_channel_nums, kernel_size=3,
+                                       pad_type='reflect', act_type=act_type, norm_type=norm_type, mode=mode,
+                                       use_spectral_norm=use_spectral_norm)
+
+        # self.deconv1 = deconv_block(in_nc=base_channel_nums*4, out_nc=base_channel_nums*2, kernel_size=4, padding=1, stride=2, act_type='relu', norm_type='batch')
+        self.dec_up1 = nn.UpsamplingBilinear2d(scale_factor=2)
+        self.dec_conv1 = conv_block(base_channel_nums * 8, out_nc=base_channel_nums * 2, kernel_size=3,
+                                    act_type=act_type, norm_type=norm_type, pad_type='reflect', mode=mode,
+                                    use_spectral_norm=use_spectral_norm)
+
+        self.dec_up2 = nn.UpsamplingBilinear2d(scale_factor=2)
+        self.dec_conv2 = conv_block(base_channel_nums * 4, out_nc=base_channel_nums * 1, kernel_size=3,
+                                    act_type=act_type, norm_type=None, pad_type='reflect', mode=mode,
+                                    use_spectral_norm=use_spectral_norm)
+
+        self.dec_conv_last = conv_block(base_channel_nums * 2, out_nc=base_channel_nums, kernel_size=3,
+                                        pad_type='reflect',
+                                        act_type=act_type, norm_type=None, use_spectral_norm=use_spectral_norm)
+
+        self.dec_conv_last_2 = conv_block(base_channel_nums * 1, out_nc=out_channels, kernel_size=3,
+                                          pad_type='reflect',
+                                          act_type=act_type, norm_type=None, use_spectral_norm=use_spectral_norm)
+
+        if init_weights:
+            self.init_weights('xaiver')
+
+    def forward(self, x, d, beta, A=None, rearrange=False):
+        if A is None:
+            A = torch.ones(x.shape[0], 3, 1, 1, device='cuda') * 0.9
+
+        if rearrange:
+            d_max = torch.max(d.contiguous().view(d.shape[0], -1), dim=1, keepdim=True)[0].unsqueeze(2).unsqueeze(3)
+            d_min = torch.min(d.contiguous().view(d.shape[0], -1), dim=1, keepdim=True)[0].unsqueeze(2).unsqueeze(3)
+            d = self.MIN_D + 30 + ((d - d_min) / (d_max - d_min + 0.01) * (self.MAX_D - self.MIN_D - 30))
+        t = torch.exp(-d * beta)
+        t = t.clamp(0.1, 0.95)
+
+        x = t * x + A * (1 - t)
+        x0 = (x - 0.5) * 2
+        x = self.enc_conv0(x)
+        x1 = self.enc_conv1(x)
+        x2 = self.enc_conv2(x1)
+        x3 = self.enc_conv3(x2)
+        x = self.bottleneck1(x3)
+        x = self.bottleneck2(x)
+        x = self.bottleneck3(x)
+        x = self.bottleneck4(x)
+
+        x = self.dec_up1(torch.cat([x, x3], dim=1))
+        x = self.dec_conv1(x)
+        x = self.dec_up2(torch.cat([x, x2], dim=1))
+        x = self.dec_conv2(x)
+        x = self.dec_conv_last(torch.cat([x, x1], dim=1))
+
+        x = self.dec_conv_last_2(x)
+        x = torch.tanh(x)
+        x = ((x0 + x).clamp(-1, 1) + 1) / 2
+        return x
+
+    def forward_random_parameters(self, x, d, rearrange=False):  # x:NCHW, ex:e^(-d(x)), N,1,H,W, beta:N,1,1,1
+        n, c, h, w = x.shape
+        beta = self.MIN_BETA + torch.rand(n, 1, 1, 1).cuda() * (self.MAX_BETA - self.MIN_BETA)
+
+        res = self(x, d, beta, rearrange=rearrange)
+
+        return res, beta
 
 
 class DepthEstimationNet(BaseNetwork):
@@ -604,7 +708,7 @@ class Discriminator(BaseNetwork):
 
 
 class DCGFTools(nn.Module):
-    def __init__(self, width=15, radius=None):
+    def __init__(self, width=15, radius=40):
         super(DCGFTools, self).__init__()
         self.width = width
         self.t_min = 0.2
@@ -644,15 +748,6 @@ class DCGFTools(nn.Module):
         normI = (I - I_min)/(I_max-I_min)
         refinedT = self.guided_filter(normI, rawt)
 
-        # n,c,h,w = refinedT.shape
-        # T_max = torch.max(refinedT.view(n,c,-1), dim=2, keepdim=True)[0].unsqueeze(3)
-        # T_min = torch.min(refinedT.view(n,c,-1), dim=2, keepdim=True)[0].unsqueeze(3)
-        # refinedT = (refinedT-T_min)/(T_max-T_min)
-
-        # print('-------------------')
-        # print(torch.max(refinedT))
-        # print(torch.min(refinedT))
-        # print(refinedT.shape)
         return refinedT
 
     def get_radiance(self,I, A, t):

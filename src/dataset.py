@@ -26,7 +26,7 @@ class Dataset(torch.utils.data.Dataset):
 
 
         self.input_size = crop_size
-
+        self.jitter = transforms.ColorJitter(brightness=(0.8,1),contrast=(1.4,1.8),saturation=(0.4,1))
 
 
 
@@ -82,12 +82,12 @@ class Dataset(torch.utils.data.Dataset):
                 while (True):
                     clean_index = int(np.random.random() * len(self.clean_data))
                     img_clean = Image.open((self.clean_data[clean_index]))
-                    #print('111')
+
+                    if self.config.IS_REAL_MODEL == 1:
+                        mask_clean = Image.open(self.get_mask_path(orig_path=self.clean_data[clean_index],
+                                                                   tar_path=self.config.PATH_CLEAN_MASK))
+
                     if np.array(img_clean).shape is None:
-                        print(self.clean_data[clean_index])
-                        print(self.clean_data[clean_index])
-                        print(self.clean_data[clean_index])
-                        print(self.clean_data[clean_index])
                         print(self.clean_data[clean_index])
                     if min(np.array(img_clean).shape[0:2]) > self.config.CROP_SIZE:
                         break
@@ -95,6 +95,9 @@ class Dataset(torch.utils.data.Dataset):
                 while(True):
                     noisy_index = int(np.random.random() * len(self.noisy_data))
                     img_noisy = Image.open((self.noisy_data[noisy_index]))
+                    if self.config.IS_REAL_MODEL == 1:
+                        mask_hazy = Image.open(self.get_mask_path(orig_path=self.noisy_data[noisy_index],tar_path=self.config.PATH_HAZY_MASK))
+
                     if np.array(img_noisy).shape is None:
                         print(self.noisy_data[noisy_index])
                     if min(np.array(img_noisy).shape[0:2]) > self.config.CROP_SIZE:
@@ -104,10 +107,6 @@ class Dataset(torch.utils.data.Dataset):
                     clean_index = int(np.random.random() * len(self.clean_data))
                     img_clean_2 = Image.open((self.clean_data[clean_index]))
                     if np.array(img_clean_2).shape is None:
-                        print(self.clean_data[clean_index])
-                        print(self.clean_data[clean_index])
-                        print(self.clean_data[clean_index])
-                        print(self.clean_data[clean_index])
                         print(self.clean_data[clean_index])
                     if min(np.array(img_clean_2).shape[0:2]) > self.config.CROP_SIZE:
                         break
@@ -121,37 +120,74 @@ class Dataset(torch.utils.data.Dataset):
                         break
 
 
+                if self.config.IS_REAL_MODEL == 0:
 
-                img_noisy = self.convert_to_rgb(img_noisy)
-                img_clean = self.convert_to_rgb(img_clean)
+                    img_noisy = self.convert_to_rgb(img_noisy)
+                    img_clean = self.convert_to_rgb(img_clean)
+
+                    img_clean = self.get_square_img(img_clean)
+                    img_noisy = self.get_square_img(img_noisy)
+
+                    img_clean = TF.resize(img_clean, size=self.input_size, interpolation=Image.BICUBIC)
+                    img_noisy = TF.resize(img_noisy, size=self.input_size, interpolation=Image.BICUBIC)
+
+                    img_clean = self.transforms(img_clean)
+                    img_noisy = self.transforms(img_noisy)
 
 
-                img_clean = self.get_square_img(img_clean)
-                img_noisy = self.get_square_img(img_noisy)
+                    """
+                    data for contrastive loss
+                    """
+                    img_noisy_2 = self.convert_to_rgb(img_noisy_2)
+                    img_clean_2 = self.convert_to_rgb(img_clean_2)
 
-                img_clean = TF.resize(img_clean, size=self.input_size, interpolation=Image.BICUBIC)
-                img_noisy = TF.resize(img_noisy, size=self.input_size, interpolation=Image.BICUBIC)
+                    img_clean_2 = self.get_square_img(img_clean_2)
+                    img_noisy_2 = self.get_square_img(img_noisy_2)
 
-                img_clean = self.transforms(img_clean)
-                img_noisy = self.transforms(img_noisy)
+                    img_clean_2 = TF.resize(img_clean_2, size=self.input_size, interpolation=Image.BICUBIC)
+                    img_noisy_2 = TF.resize(img_noisy_2, size=self.input_size, interpolation=Image.BICUBIC)
 
+                    img_clean_2 = self.transforms(img_clean_2)
+                    img_noisy_2 = self.transforms(img_noisy_2)
 
-                """
-                data for contrastive loss
-                """
-                img_noisy_2 = self.convert_to_rgb(img_noisy_2)
-                img_clean_2 = self.convert_to_rgb(img_clean_2)
+                    return img_clean, img_noisy, img_clean_2, img_noisy_2
 
-                img_clean_2 = self.get_square_img(img_clean_2)
-                img_noisy_2 = self.get_square_img(img_noisy_2)
+                elif self.config.IS_REAL_MODEL == 1:
+                    img_noisy = self.convert_to_rgb(img_noisy)
+                    img_clean = self.convert_to_rgb(img_clean)
 
-                img_clean_2 = TF.resize(img_clean_2, size=self.input_size, interpolation=Image.BICUBIC)
-                img_noisy_2 = TF.resize(img_noisy_2, size=self.input_size, interpolation=Image.BICUBIC)
+                    img_noisy, mask_hazy = self.get_square_imgs(img_noisy, mask_hazy)
+                    img_clean, mask_clean = self.get_square_imgs(img_clean, mask_clean)
 
-                img_clean_2 = self.transforms(img_clean_2)
-                img_noisy_2 = self.transforms(img_noisy_2)
+                    img_clean = TF.resize(img_clean, size=self.input_size, interpolation=Image.BICUBIC)
+                    img_noisy = TF.resize(img_noisy, size=self.input_size, interpolation=Image.BICUBIC)
+                    mask_clean = TF.resize(mask_clean, size=self.input_size, interpolation=Image.BICUBIC)
+                    mask_hazy = TF.resize(mask_hazy, size=self.input_size, interpolation=Image.BICUBIC)
 
-                return img_clean, img_noisy, img_clean_2, img_noisy_2
+                    img_clean = self.jitter(img_clean)
+                    img_clean, mask_clean = self.apply_transforms(img_clean, mask_clean)
+                    img_noisy, mask_hazy = self.apply_transforms(img_noisy, mask_hazy)
+
+                    """
+                    Extra data for contrastive loss
+                    """
+                    img_noisy_2 = self.convert_to_rgb(img_noisy_2)
+                    img_clean_2 = self.convert_to_rgb(img_clean_2)
+
+                    img_clean_2 = self.get_square_img(img_clean_2)
+                    img_noisy_2 = self.get_square_img(img_noisy_2)
+
+                    img_clean_2 = TF.resize(img_clean_2, size=self.input_size, interpolation=Image.BICUBIC)
+                    img_noisy_2 = TF.resize(img_noisy_2, size=self.input_size, interpolation=Image.BICUBIC)
+
+                    img_clean_2 = self.transforms(img_clean_2)
+                    img_noisy_2 = self.transforms(img_noisy_2)
+
+                    img_clean = img_clean.clamp(0.04, 1)
+                    img_noisy = img_noisy.clamp(0.04, 1)
+
+                    return img_clean, img_noisy, img_clean_2, img_noisy_2, mask_clean, mask_hazy
+
 
             elif self.split in ['pair_train', 'pair_test']:
 
@@ -170,19 +206,8 @@ class Dataset(torch.utils.data.Dataset):
                 img_noisy = TF.to_tensor(img_noisy)
 
 
-                return img_clean, img_noisy #, gt_grad
+                return img_clean, img_noisy
 
-
-
-    def cal_graident(self,x):
-        if x.shape[0] == 3:
-            x = (0.299 * x[0] + 0.587 * x[1] + x[2] * 0.114).unsqueeze(0).unsqueeze(0)
-        else:
-            x = x.unsqueeze(0)
-        g_x = torch.abs(torch.nn.functional.conv2d(x, self.sobelkernel_x, padding=1))
-        g_y = torch.abs(torch.nn.functional.conv2d(x, self.sobelkernel_y, padding=1))
-
-        return (g_x + g_y).squeeze(0)
 
     def load_flist(self, flist):
         if isinstance(flist, list):
@@ -283,3 +308,9 @@ class Dataset(torch.utils.data.Dataset):
                 imgs[i] = TF.crop(imgs[i], 0, border, w, w)
 
         return imgs
+
+    def get_mask_path(self, orig_path, tar_path ):
+        basename = os.path.basename(orig_path)
+        new_path = os.path.join(tar_path,basename)
+
+        return new_path
