@@ -23,7 +23,7 @@ python scripts/flist.py --path path_to_SOTS_indoor_hazy_path --output ./datasets
 
 Please notice that the ground truth images of SOTS-indoor have additional white border, you can crop it first.
 
-### 2.Data for training (Still organizing)
+### 2.Data for training 
 For training on the synthetic indoor dataset, we used [ITS](https://sites.google.com/view/reside-dehaze-datasets/reside-standard) dataset, you can follow the operations above to generate the training file lists.
 
 ```
@@ -41,7 +41,7 @@ To use the pre-trained models, download it from the following link then copy it 
 [Pretrained model on ITS](https://drive.google.com/file/d/1_JA3UHVpBym4wARDM8GkcsCgEI6x2irP/view?usp=share_link) | [Pretrained model on Real](https://drive.google.com/file/d/1hshyzMCXYrPHUzwZk2rji9ExEQDKbOD_/view?usp=share_link)
 
 
-### 1.Training (Still Organizing)
+### 1.Training 
 1)Prepare the training datasets following the operations in the Dataset part.
 2)Add a config file 'config.yml' in your checkpoints folder. We provide an example checkpoints folder and config file in `./checkpoints/train_example`, remember to fill the correct dataset in the config file. 
 3)Train the model, for example:
