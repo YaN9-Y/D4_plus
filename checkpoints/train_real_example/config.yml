@@ -8,8 +8,8 @@ TEST_MODE: pair_test     # hazy: for dehaze.  clean: for rehaze
 
 TRAIN_CLEAN_FLIST: ./datasets/real_train_clean.flist   # filelist of the clean training images
 TRAIN_HAZY_FLIST: ./datasets/real_train_hazy.flist   # filelist of the hazy training images
-PATH_CLEAN_MASK: /home/xteam/yang/dataset/reside_unpaired_new/clean_mask  # path of the clean images mask
-PATH_HAZY_MASK: /home/xteam/yang/dataset/reside_unpaired_new/hazy_mask # path of the hazy images mask
+PATH_CLEAN_MASK: /path/to/your/clean_mask  # path of the clean images mask
+PATH_HAZY_MASK: /path/to/your/hazy_mask # path of the hazy images mask
 
 
 
